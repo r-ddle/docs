@@ -1,4 +1,263 @@
 ---
-title: "Documentation Domain"
-description: "This website will be the place I will be regularly updating for all my personal projects to better understand the codebase when I come back from a long break."
+mode: "custom"
 ---
+
+# Masjid Management System - Project Overview
+
+## 🕌 Project Purpose
+
+The **Masjid Management System** is a full-stack web application designed to digitize and streamline the administrative operations of a mosque community. This system serves as a comprehensive management tool for tracking members, managing financial contributions, and organizing community activities across different geographical locations and organizational zones.
+
+## 🎯 Core Functionality
+
+### 1. Janaza Fund Management
+
+The primary feature of the system is managing the Janaza fund - a community fund used for funeral expenses and related religious obligations. The system provides:
+
+- **Location-based Member Organization**: Members are organized by geographical locations (25\+ predefined areas including Araliya Uyana, Asiri Uyana, Bandaranayakapura, etc.)
+- **Monthly Payment Tracking**: Tracks monthly contributions with statuses: `Paid`, `Not_Paid`, `Pending`, `Waived`
+- **Financial Status Management**: Each member has a JSON-based payment history for 2024 (`janaza2024` field)
+- **Member CRUD Operations**: Complete create, read, update, delete functionality for member records
+
+### 2. Mahalla Member Management
+
+Manages community members organized by administrative zones:
+
+- **Zone-based Organization**: Members categorized by zones (2C, 3C, 4B, 5B, 6B, 7B, 8B, 9B, 10B, Others)
+- **Contact Information Management**: Stores names, addresses, and telephone numbers
+- **Zone Filtering**: Ability to filter and display members by specific zones
+
+### 3. User Authentication & Administration
+
+- **JWT-based Authentication**: Secure login system using JSON Web Tokens
+- **Admin User Management**: System for creating and managing administrative users
+- **Role-based Access**: Differentiation between regular users and administrators
+
+### 4. Future Extensibility
+
+The system includes placeholder sections for:
+
+- **Hifl Madarsa Details**: Islamic education program management (UI prepared, backend pending)
+
+## 🏗️ Technical Architecture
+
+### Backend (Node.js/Express)
+
+```
+src/
+├── config/           # Database configuration
+├── controllers/      # Request handlers for different entities
+├── middleware/       # Authentication and error handling
+├── models/          # Database interaction layer
+├── routes/          # API endpoint definitions
+├── services/        # Business logic layer
+└── utils/           # Utility functions (JWT, password hashing, custom errors)
+```
+
+**Key Technologies:**
+
+- **Runtime**: Node.js with Express.js framework
+- **Database**: PostgreSQL with direct SQL queries
+- **Authentication**: JWT tokens with bcryptjs password hashing
+- **Security**: Helmet, CORS, rate limiting
+- **Validation**: express-validator for input validation
+- **Logging**: Morgan for HTTP request logging
+
+### Frontend (Vanilla JavaScript)
+
+- **Pages**:
+  - [`index.html`](index.html): Login interface
+  - [`dashboard.html`](dashboard.html): Main management interface
+- **JavaScript Files**:
+  - [`app.js`](app.js): Login page functionality
+  - [`dashbaord.js`](dashbaord.js): Dashboard operations and UI management
+  - [`api.js`](api.js): Authenticated API call helper
+  - [`dashboard-api.js`](dashboard-api.js): Dashboard-specific API operations
+- **Styling**: Tailwind CSS with DaisyUI components
+- **Icons**: Phosphor Icons library
+
+### Database Schema
+
+#### Users Table
+
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    address TEXT,
+    is_admin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### Members Table (Janaza Fund)
+
+```sql
+CREATE TABLE members (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    telephone VARCHAR(50),
+    address TEXT,
+    location VARCHAR(100) NOT NULL,
+    janaza2024 JSONB, -- Monthly payment status: {"jan": "Paid", "feb": "Not_Paid"}
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### Mahallah Members Table
+
+```sql
+CREATE TABLE mahallah_members (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    zone VARCHAR(50), -- e.g., "2C", "3C"
+    address TEXT,
+    telephone VARCHAR(50),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 🔌 API Endpoints
+
+### Authentication
+
+- `POST /api/auth/login` - User authentication
+
+### User Management
+
+- `GET /api/users/me` - Get current user info (Protected)
+
+### Janaza Members
+
+- `GET /api/dashboard/members/:location` - Get members by location (Protected)
+- `POST /api/dashboard/members` - Create new member (Protected)
+- `GET /api/dashboard/members/id/:memberId` - Get member by ID (Protected)
+- `PUT /api/dashboard/members/:memberId` - Update member (Protected)
+- `DELETE /api/dashboard/members/:memberId` - Delete member (Protected)
+- `PATCH /api/dashboard/members/:memberId/payment-status` - Update payment status (Protected)
+
+### Mahalla Members
+
+- `GET /api/dashboard/mahallah-members` - Get all/filtered mahalla members (Protected)
+- `POST /api/dashboard/mahallah-members` - Create new mahalla member (Protected)
+
+### Admin Operations
+
+- `POST /api/dashboard/admins` - Create new admin user (Protected)
+
+## 📊 Business Logic
+
+### Payment Status Workflow
+
+1. **Monthly Tracking**: Each member's payment status is tracked monthly
+2. **Status Types**:
+   - `Paid`: Member has made their monthly contribution
+   - `Not_Paid`: Member hasn't made payment
+   - `Pending`: Payment is in process
+   - `Waived`: Payment waived due to circumstances
+3. **JSON Storage**: Payment history stored as JSON for flexibility
+
+### Location Management
+
+The system manages 25\+ predefined locations representing different communities:
+
+- Araliya Uyana, Asiri Uyana, Bandaranayakapura, Bangalawatte
+- Bogahawila, Dickhenawatte, GetubaDuwa, Golden Medows
+- Green Vally, Homagama, KahaThuduwa, Kirigampamuwuna
+- Kiriwaththuduwa, Madara Uyana, Makumbura Kottawa
+- Melwatte Siyabalgoda, Nadun Uyana, Pelanwatte, Pink Row
+- Polgasowita Road, Prasanna Uyana, Sadunpura, Salgas Mawatha
+- Samanala Place, Siddamulla, Wasanawatte
+
+### Zone Management
+
+Administrative zones for Mahalla members:
+
+- 2C, 3C, 4B, 5B, 6B, 7B, 8B, 9B, 10B, Others
+
+## 🔧 Development & Deployment
+
+### Prerequisites
+
+- Node.js (v18.x or later)
+- PostgreSQL database
+- npm package manager
+
+### Key Scripts
+
+- `npm start` - Production mode
+- `npm run start:dev` - Development with auto-reload
+- `npm test` - Run Jest tests
+- `npm run db:seed` - Populate database with sample data
+- `npm run lint` - Code linting
+- `npm run format` - Code formatting
+
+### Development Tools
+
+- **Testing**: Jest with Supertest for API testing
+- **Code Quality**: ESLint with Airbnb config, Prettier formatting
+- **Development**: Nodemon for auto-reloading
+- **Database**: Direct PostgreSQL queries (no ORM)
+
+## 🛡️ Security Features
+
+1. **Password Security**: bcryptjs hashing
+2. **JWT Authentication**: Secure token-based auth
+3. **HTTP Security**: Helmet.js for security headers
+4. **CORS Protection**: Configurable cross-origin settings
+5. **Rate Limiting**: API request rate limiting
+6. **Input Validation**: express-validator for request validation
+7. **Error Handling**: Centralized error management
+
+## 📈 Current Status & Future Extensions
+
+### Implemented Features
+
+✅ Janaza fund member management\
+✅ Mahalla member management\
+✅ User authentication system\
+✅ Admin user creation\
+✅ Location-based organization\
+✅ Payment status tracking\
+✅ Responsive web interface
+
+### Planned Extensions
+
+🔄 Hifl Madarsa management (UI ready, backend pending)\
+🔄 Advanced reporting and analytics\
+🔄 Mobile application support\
+🔄 Email/SMS notifications\
+🔄 Export functionality for reports
+
+## 🎨 User Interface
+
+The system features a modern, responsive design using:
+
+- **Design System**: DaisyUI components with Tailwind CSS
+- **Typography**: Cabinet Grotesk font family
+- **Icons**: Phosphor Icons for consistent iconography
+- **Layout**: Responsive drawer-based navigation
+- **Interactions**: SweetAlert2 for user feedback
+
+The interface provides:
+
+- Location selector dropdown for easy navigation
+- Zone-based filtering for Mahalla members
+- Inline editing capabilities for member information
+- Payment status management with visual indicators
+- Administrative functions for user management
+
+## 🔍 Data Management Philosophy
+
+The system is designed with flexibility in mind:
+
+- **JSON-based Payment Tracking**: Allows for easy schema evolution
+- **Location-centric Organization**: Reflects real-world community structure
+- **Minimal but Complete**: Essential features without unnecessary complexity
+- **Extensible Architecture**: Easy to add new modules and features
+
+This Masjid Management System represents a practical digitization solution for mosque administration, focusing on the most critical day-to-day operations while maintaining simplicity and reliability.
