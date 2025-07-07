@@ -20,6 +20,15 @@
                 "pages": [
                     "introduction"
                 ]
+            },
+            {
+                "tab": "Ralhum Sports E-Commerce",
+                "pages": [
+                  "Introduction",
+                  "API",
+                  "Collections",
+                  "Security"
+                ]
             }
         ]
     },
